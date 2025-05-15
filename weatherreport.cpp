@@ -12,6 +12,7 @@ namespace WeatherSpace
             virtual int Precipitation() const = 0;
             virtual int Humidity() const = 0;
             virtual int WindSpeedKMPH() const = 0;
+            virtual ~IWeatherSensor() = default; // Add a virtual destructor
     };
     /// <summary>
     /// This is a stub for a weather sensor. For the sake of testing 
@@ -70,6 +71,7 @@ namespace WeatherSpace
         // (function returns Sunny day, it should predict rain)
         string report = Report(sensor);
         assert(report.length() > 0);
+        assert(report.find("rain") != string::npos);
     }
 }
 

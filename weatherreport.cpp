@@ -12,7 +12,9 @@ namespace WeatherSpace
             virtual int Precipitation() const = 0;
             virtual int Humidity() const = 0;
             virtual int WindSpeedKMPH() const = 0;
+            virtual ~IWeatherSensor() = default; // Add a virtual destructor
     };
+
     /// <summary>
     /// This is a stub for a weather sensor. For the sake of testing 
     /// we create a stub that generates weather data and allows us to
@@ -20,56 +22,72 @@ namespace WeatherSpace
     /// without needing the actual Sensor during development
     /// </summary>
     class SensorStub : public IWeatherSensor {
-        int Humidity() const override {
-            return 72;
-        }
+        private:
+            double temperature;
+            int precipitation;
+            int humidity;
+            int windSpeed;
 
-        int Precipitation() const override {
-            return 70;
-        }
+        public:
+            // Constructor to allow configurable sensor values
+            SensorStub(double temp, int precip, int hum, int wind)
+                : temperature(temp), precipitation(precip), humidity(hum), windSpeed(wind) {}
 
-        double TemperatureInC() const override {
-            return 26;
-        }
+            double TemperatureInC() const override {
+                return temperature;
+            }
 
-        int WindSpeedKMPH() const override {
-            return 52;
-        }
+            int Precipitation() const override {
+                return precipitation;
+            }
+
+            int Humidity() const override {
+                return humidity;
+            }
+
+            int WindSpeedKMPH() const override {
+                return windSpeed;
+            }
     };
+
     string Report(const IWeatherSensor& sensor)
     {
         int precipitation = sensor.Precipitation();
-        // precipitation < 20 is a sunny day
+        int windSpeed = sensor.WindSpeedKMPH();
+        double temperature = sensor.TemperatureInC();
+
+        // Default report is "Sunny Day"
         string report = "Sunny Day";
 
-        if (sensor.TemperatureInC() > 25)
-        {
-            if (precipitation >= 20 && precipitation < 60)
+        if (temperature > 25) {
+            if (precipitation >= 20 && precipitation < 60) {
                 report = "Partly Cloudy";
-            else if (sensor.WindSpeedKMPH() > 50)
+            } else if (precipitation >= 60 && windSpeed < 50) {
+                report = "Heavy Rain";
+            } else if (windSpeed > 50) {
                 report = "Alert, Stormy with heavy rain";
+            }
         }
         return report;
     }
     
     void TestRainy()
     {
-        SensorStub sensor;
+        // Simulate rainy conditions: high precipitation and high wind speed
+        SensorStub sensor(26, 70, 72, 52);
         string report = Report(sensor);
-        cout << report << endl;
-        assert(report.find("rain") != string::npos);
+        cout << "TestRainy Report: " << report << endl;
+        assert(report.find("rain") != string::npos); // Ensure "rain" is in the report
     }
 
     void TestHighPrecipitation()
     {
-        // This instance of stub needs to be different-
-        // to give high precipitation (>60) and low wind-speed (<50)
-        SensorStub sensor;
-
-        // strengthen the assert to expose the bug
-        // (function returns Sunny day, it should predict rain)
+        // Simulate high precipitation (>60) and low wind speed (<50)
+        SensorStub sensor(26, 70, 72, 40);
         string report = Report(sensor);
-        assert(report.length() > 0);
+        cout << "TestHighPrecipitation Report: " << report << endl;
+        assert(report.length() > 0); // Ensure the report is not empty
+        assert(report.find("Heavy Rain") != string::npos); // Ensure "Heavy Rain" is in the report
     }
 }
 
